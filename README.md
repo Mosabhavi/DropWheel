@@ -62,10 +62,14 @@ metadata never leave your computer.
 
 ### Download
 
-1. Get the latest `DropWheel-x.y.z.zip` from [Releases](https://github.com/Mosabhavi/DropWheel/releases).
+**Not a tech person? Follow the [step-by-step install guide](INSTALL.md).**
+
+Requires a Mac with Apple silicon (M1 or newer) running macOS 15 or later.
+
+1. Get the latest `DropWheel-x.y.z.zip` from [Releases](https://github.com/Mosabhavi/DropWheel/releases/latest).
 2. Unzip it and drag **DropWheel.app** into **Applications**.
-3. The app isn't notarized, so open it the first time with **right-click → Open → Open**. You can also run
-   this once:
+3. The app isn't notarized, so macOS blocks the first launch. Double-click it, click **Done**, then go to
+   **System Settings → Privacy & Security** and click **Open Anyway**. You can also run this once:
 
    ```bash
    xattr -dr com.apple.quarantine /Applications/DropWheel.app
