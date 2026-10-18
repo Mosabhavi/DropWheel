@@ -160,7 +160,10 @@ if CommandLine.arguments.count > 4, CommandLine.arguments[1] == "--render" {
     view.configure(urls: [URL(fileURLWithPath: args[3])], mode: args[2] == "tools" ? .tools : .convert)
     if args.count > 5 { view.highlighted = Int(args[5]) }
     RunLoop.main.run(until: Date().addingTimeInterval(1.5))  // let the Quick Look thumbnail arrive
-    let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds)!
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(view.bounds.width * 2), pixelsHigh: Int(view.bounds.height * 2),
+                               bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                               colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    rep.size = view.bounds.size
     let bg = NSImage(size: view.bounds.size, flipped: false) { r in
         NSGradient(colors: [.systemOrange, .systemPink, .systemPurple])!.draw(in: r, angle: -45)
         NSColor.white.withAlphaComponent(0.25).setFill()

@@ -122,6 +122,9 @@ extension SelfTest {
         case "edit":
             size = NSSize(width: 520, height: 720)
             view = AnyView(EditPhotoView(url: file, base: CIImage(cgImage: try ImageOps.load(file, maxPixel: 1400)), close: {}))
+        case "speed":
+            size = NSSize(width: 460, height: 210)
+            view = AnyView(SpeedView(url: file, m: SpeedModel(), close: {}))
         case "trim":
             size = NSSize(width: 560, height: 330)
             view = AnyView(AudioTrimView(url: file, buffer: try AudioOps.readAll(file), close: {}))
@@ -129,15 +132,38 @@ extension SelfTest {
             throw AppError("Unknown panel \(name)")
         }
         let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -3000, y: -3000), size: size),
-                              styleMask: [.titled, .fullSizeContentView], backing: .buffered, defer: false)
-        window.titlebarAppearsTransparent = true
+                              styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.appearance = NSAppearance(named: .aqua)
-        let host = NSHostingView(rootView: view.frame(width: size.width, height: size.height))
+        let titles = ["crop": "Crop Photo", "redact": "Redact Photo", "annotate": "Annotate Photo", "addbg": "Add Background",
+                      "bleep": "Bleep Audio", "channels": "Convert Audio Channels", "compress": "Compress",
+                      "metadata": "Metadata — \(file.lastPathComponent)", "organize": "Organize Pages", "edit": "Edit Photo",
+                      "trim": "Trim Audio", "speed": "Change Speed"]
+        // The offscreen render has no title bar, so draw the window chrome ourselves.
+        let framed = ZStack(alignment: .top) {
+            Color(nsColor: .windowBackgroundColor)
+            view
+            HStack(spacing: 8) {
+                ForEach([Color.red, .yellow, .green], id: \.self) { Circle().fill($0.opacity(0.85)).frame(width: 12, height: 12) }
+                Spacer()
+            }
+            .padding(.leading, 12).padding(.top, 9)
+            Text(titles[name] ?? "").font(.system(size: 13, weight: .semibold)).padding(.top, 7)
+        }
+        .frame(width: size.width, height: size.height)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .ignoresSafeArea()
+        let host = NSHostingView(rootView: framed)
         window.contentView = host
         window.orderFrontRegardless()
         try await Task.sleep(for: .milliseconds(900))
         host.layoutSubtreeIfNeeded()
-        let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds)!
+        // Render at 2x so screenshots stay crisp on Retina screens and GitHub.
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(host.bounds.width * 2), pixelsHigh: Int(host.bounds.height * 2),
+                                   bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                   colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        rep.size = host.bounds.size
         host.cacheDisplay(in: host.bounds, to: rep)
         try rep.representation(using: .png, properties: [:])!.write(to: out)
         window.orderOut(nil)
