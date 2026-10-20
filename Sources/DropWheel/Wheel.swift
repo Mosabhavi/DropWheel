@@ -180,11 +180,17 @@ final class WheelView: NSView {
         let r = (innerR + outerR) / 2 + 4
         let pt = CGPoint(x: center.x + cos(mid) * r, y: center.y + sin(mid) * r)
         let color: NSColor = highlighted ? .white : (dark ? .white : NSColor(white: 0.12, alpha: 1))
-        let fontSize: CGFloat = action.symbol == nil ? 14 : 10
-        let font = NSFont.systemFont(ofSize: fontSize, weight: action.symbol == nil ? .bold : .heavy)
-        let text = NSAttributedString(string: action.title.uppercased(), attributes: [
-            .font: font, .foregroundColor: color, .kern: 0.4,
-        ])
+        // Shrink long labels until they fit the segment's width at this radius.
+        let room = 2 * r * sin(span() / 2) - 16
+        var fontSize: CGFloat = action.symbol == nil ? 14 : 10
+        var text: NSAttributedString
+        repeat {
+            let font = NSFont.systemFont(ofSize: fontSize, weight: action.symbol == nil ? .bold : .heavy)
+            text = NSAttributedString(string: action.title.uppercased(), attributes: [
+                .font: font, .foregroundColor: color, .kern: 0.4,
+            ])
+            fontSize -= 0.5
+        } while text.size().width > room && fontSize >= 8
         let ts = text.size()
 
         if let name = action.symbol,

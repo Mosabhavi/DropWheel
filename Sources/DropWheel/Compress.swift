@@ -13,13 +13,24 @@ enum Compressor {
     enum Goal { case level(Level), targetBytes(Int) }
 
     static func compress(_ src: URL, goal: Goal) async throws -> URL {
+        let out: URL
         switch FileKind.of(src) {
-        case .image: return try image(src, goal: goal)
-        case .video: return try await video(src, goal: goal)
-        case .audio: return try await audio(src, goal: goal)
-        case .pdf: return try pdf(src, goal: goal)
+        case .image: out = try image(src, goal: goal)
+        case .video: out = try await video(src, goal: goal)
+        case .audio: out = try await audio(src, goal: goal)
+        case .pdf: out = try pdf(src, goal: goal)
         default: throw AppError("Can’t compress \(src.lastPathComponent)")
         }
+        // A "compressed" copy that isn't smaller is worse than none.
+        if size(out) >= size(src) {
+            try? FileManager.default.removeItem(at: out)
+            throw AppError("\(src.lastPathComponent) is already as small as it gets — no copy saved")
+        }
+        return out
+    }
+
+    static func size(_ url: URL) -> Int {
+        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
     }
 
     // MARK: Images
@@ -75,8 +86,16 @@ enum Compressor {
         let out = Output.url(for: src, suffix: "compressed", ext: "mp4")
         switch goal {
         case .level(let level):
-            let preset = [AVAssetExportPresetHEVCHighestQuality, AVAssetExportPresetHEVC1920x1080, AVAssetExportPreset1280x720][level.rawValue]
-            try await VideoOps.export(asset, preset: preset, to: out, ext: "mp4")
+            // Aim for a share of the original's size so the result is reliably smaller.
+            let share = [0.7, 0.45, 0.25][level.rawValue]
+            let target = Int(Double(size(src)) * share)
+            do {
+                return try await video(src, goal: .targetBytes(target))
+            } catch {
+                try? FileManager.default.removeItem(at: out)
+                let preset = [AVAssetExportPresetHEVCHighestQuality, AVAssetExportPresetHEVC1920x1080, AVAssetExportPreset1280x720][level.rawValue]
+                try await VideoOps.export(asset, preset: preset, to: out, ext: "mp4")
+            }
         case .targetBytes(let target):
             let seconds = try await asset.load(.duration).seconds
             guard seconds > 0 else { throw AppError("Video has no duration") }
@@ -100,7 +119,10 @@ enum Compressor {
         let w = Int(natural.width * scale) / 2 * 2, h = Int(natural.height * scale) / 2 * 2
 
         let reader = try AVAssetReader(asset: asset)
-        let writer = try AVAssetWriter(outputURL: out, fileType: .mp4)
+        // The web-optimising pass leaves a backup file beside its output, so write in the temp folder.
+        let tmp = Output.temporary(ext: "mp4")
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        let writer = try AVAssetWriter(outputURL: tmp, fileType: .mp4)
         writer.shouldOptimizeForNetworkUse = true
 
         let vOut = AVAssetReaderTrackOutput(track: vTrack, outputSettings: [
@@ -157,6 +179,7 @@ enum Compressor {
         if reader.status == .failed { writer.cancelWriting(); throw reader.error ?? AppError("Couldn’t read video") }
         await writer.finishWriting()
         if writer.status != .completed { throw writer.error ?? AppError("Couldn’t write video") }
+        try FileManager.default.moveItem(at: tmp, to: out)
     }
 
     // MARK: Audio

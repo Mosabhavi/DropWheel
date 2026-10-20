@@ -48,7 +48,13 @@ enum Catalog {
         let kind = FileKind.of(urls)
         let ext = urls.first.map { normalizedExt($0) } ?? ""
         switch mode {
-        case .convert: return convert(kind, ext: ext, urls: urls)
+        case .convert:
+            var list = convert(kind, ext: ext, urls: urls)
+            // One-drop compress for media and PDFs, without opening the Compress window.
+            if [.image, .video, .audio, .pdf].contains(kind) {
+                list.append(each("Compress") { try await Compressor.compress($0, goal: .level(.balanced)) })
+            }
+            return list
         case .tools: return tools(kind, many: urls.count > 1)
         }
     }

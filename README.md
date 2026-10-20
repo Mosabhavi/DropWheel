@@ -32,6 +32,8 @@ metadata never leave your computer.
 | **Subtitles** | SRT ⇄ VTT, plain text |
 | **Archives** | Extract (ZIP, TAR, GZ, TGZ, RAR, 7z…), ZIP, TAR, TGZ, GZIP |
 
+Photos, videos, audio and PDFs also get a one-drop **Compress** on the Shift wheel.
+
 ### Tools (Option + Shift)
 
 - **Compress** images, video, audio and PDFs by quality, or aim for an exact file size.
@@ -121,7 +123,7 @@ Notes:
 
 - **Trigger Key:** use **Shift** (default), **Command** or **Control** to open the wheel. Option is always
   added for tools.
-- **Open at Login**.
+- **Open at Login** (DropWheel also asks about this the first time it opens).
 - **How to Use** shows the gesture reminder again.
 
 ### Troubleshooting

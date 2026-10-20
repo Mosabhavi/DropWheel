@@ -22,7 +22,7 @@ Both match? Great, carry on.
 
 1. Open this link in Safari or Chrome: <https://github.com/Mosabhavi/DropWheel/releases/latest>
 2. Scroll down to the section called **Assets**.
-3. Click **DropWheel-1.0.0.zip**. Don't click the files called "Source code": those are for programmers.
+3. Click **DropWheel-1.1.0.zip** (or whatever the newest number is). Don't click the files called "Source code": those are for programmers.
 4. Wait a few seconds for the download to finish. It's small, about 1.5 MB.
 
 You don't need a GitHub account, and you don't need to sign in.
@@ -33,7 +33,7 @@ You don't need a GitHub account, and you don't need to sign in.
 2. In the left sidebar, click **Downloads**.
 3. Find the downloaded file:
    - If you see an app called **DropWheel** (a colorful wheel icon), go to the next step.
-   - If you only see **DropWheel-1.0.0.zip**, double-click it. The DropWheel app appears next to it.
+   - If you only see the **.zip** file, double-click it. The DropWheel app appears next to it.
 4. Drag the **DropWheel** app onto **Applications** in the left sidebar, and let go.
 
 You can now delete the .zip file. You don't need it anymore.
@@ -53,7 +53,8 @@ with Apple (registering costs money), so macOS asks you to confirm once. You onl
 6. Click **Open Anyway** next to it.
 7. Confirm with your Mac password or Touch ID, then click **Open Anyway** again.
 
-A welcome message appears: click **OK**. DropWheel is now running.
+A welcome message appears: click **OK**. Then DropWheel asks **"Open DropWheel automatically when you log in?"**:
+click **Open at Login** so it's always ready (recommended). DropWheel is now running.
 
 **Where is it?** Look at the **top-right of your screen**, in the menu bar next to the clock and Wi-Fi
 icons. You'll see a small circle icon (◎). That's DropWheel. There's no window and no Dock icon; it waits
@@ -86,6 +87,8 @@ Good to know:
 - **Some tools open a small window**, for example Crop or Trim. Adjust, then click **Apply**.
 - **Prefer the Command key (⌘) instead of Shift?** Click the ◎ icon in the menu bar → **Trigger Key** →
   **Command**.
+- **Make a file smaller?** Drop it on **Compress** on the Shift wheel. For more control (or an exact size), use
+  Option + Shift → **Compress**.
 - **Start it automatically** when your Mac turns on: ◎ icon → **Open at Login**.
 - Nothing is uploaded. Everything happens on your own Mac.
 

@@ -1,7 +1,7 @@
 import AppKit
 import ServiceManagement
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let monitor = DragMonitor()
     private lazy var panel = WheelPanel()
@@ -20,6 +20,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             UserDefaults.standard.set(true, forKey: "didShowWelcome")
             showHelp()
         }
+        askAboutLogin()
+    }
+
+    /// Asked once (also for people upgrading from an older version).
+    private func askAboutLogin() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: "didAskOpenAtLogin") else { return }
+        defaults.set(true, forKey: "didAskOpenAtLogin")
+        guard SMAppService.mainApp.status != .enabled else { return }
+
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Open DropWheel automatically when you log in?"
+        alert.informativeText = "DropWheel only works while it's running. You can change this any time from the ◎ menu bar icon → Open at Login."
+        alert.addButton(withTitle: "Open at Login")
+        alert.addButton(withTitle: "Not Now")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try SMAppService.mainApp.register()
+        } catch {
+            Toast.shared.show("Couldn’t turn on Open at Login: \(error.localizedDescription)", style: .error)
+        }
+        refreshLoginItem()
+    }
+
+    private func refreshLoginItem() {
+        statusItem.menu?.items.first { $0.action == #selector(toggleLogin(_:)) }?.state =
+            SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
     private func showWheel(urls: [URL], mode: Mode, at point: NSPoint) {
@@ -72,9 +100,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         login.target = self
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
         menu.addItem(.separator())
+        menu.delegate = self
         menu.addItem(withTitle: "Quit DropWheel", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
     }
+
+    func menuWillOpen(_ menu: NSMenu) { refreshLoginItem() }
 
     @objc private func chooseTrigger(_ item: NSMenuItem) {
         guard let raw = item.representedObject as? String, let key = TriggerKey(rawValue: raw) else { return }
